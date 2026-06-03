@@ -1,18 +1,24 @@
 import { Search, Plus, Bell, User, Car, Home, Briefcase,
          Smartphone, Sofa, Shirt, Bike, PawPrint } from "lucide-react";
+import { supabase } from "./lib/supabase";
 
-const categories = [
-  { id: "transport", name: "Транспорт", icon: Car, count: 5310 },
-  { id: "realty", name: "Недвижимость", icon: Home, count: 8421 },
-  { id: "jobs", name: "Работа", icon: Briefcase, count: 2987 },
-  { id: "electronics", name: "Электроника", icon: Smartphone, count: 6644 },
-  { id: "home_cat", name: "Для дома", icon: Sofa, count: 4102 },
-  { id: "personal", name: "Личные вещи", icon: Shirt, count: 3210 },
-  { id: "hobby", name: "Хобби", icon: Bike, count: 1980 },
-  { id: "animals", name: "Животные", icon: PawPrint, count: 932 },
-];
+const iconMap: Record<string, React.ComponentType<{size?: number, className?: string}>> = {
+  transport: Car,
+  realty: Home,
+  jobs: Briefcase,
+  electronics: Smartphone,
+  home_cat: Sofa,
+  personal: Shirt,
+  hobby: Bike,
+  animals: PawPrint,
+};
 
-export default function Page() {
+export default async function Page() {
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('*')
+    .order('id');
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -43,8 +49,8 @@ export default function Page() {
         </div>
         <div className="border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-5 flex gap-1 overflow-x-auto">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
+            {categories?.map((cat) => {
+              const Icon = iconMap[cat.slug] || Car;
               return (
                 <button key={cat.id} className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:text-blue-700 border-b-2 border-transparent hover:border-blue-700 transition-colors whitespace-nowrap">
                   <Icon size={15} />
@@ -61,15 +67,15 @@ export default function Page() {
         </h1>
         <p className="text-gray-500 mb-10">Объявления по всей Латвии — от квартиры до велосипеда.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
+          {categories?.map((cat) => {
+            const Icon = iconMap[cat.slug] || Car;
             return (
               <button key={cat.id} className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-blue-400 hover:shadow-md transition-all group">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
                   <Icon size={20} className="text-blue-700" />
                 </div>
                 <div className="font-bold text-gray-900 text-sm">{cat.name}</div>
-                <div className="text-xs text-gray-400 mt-1">{cat.count.toLocaleString("ru-RU")} объявл.</div>
+                <div className="text-xs text-gray-400 mt-1">{cat.count?.toLocaleString("ru-RU")} объявл.</div>
               </button>
             );
           })}
