@@ -1,52 +1,80 @@
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Шапка */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <div className="text-2xl font-bold text-blue-700">
-          tirgus<span className="text-gray-900">.lv</span>
-        </div>
-        <input
-          type="text"
-          placeholder="Найти что угодно..."
-          className="flex-1 max-w-md border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:border-blue-400"
-        />
-        <button className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">
-          Подать объявление
-        </button>
-      </header>
+import { Search, Plus, Bell, User, Car, Home, Briefcase,
+         Smartphone, Sofa, Shirt, Bike, PawPrint } from "lucide-react";
 
-      {/* Главная */}
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+const categories = [
+  { id: "transport", name: "Транспорт", icon: Car, count: 5310 },
+  { id: "realty", name: "Недвижимость", icon: Home, count: 8421 },
+  { id: "jobs", name: "Работа", icon: Briefcase, count: 2987 },
+  { id: "electronics", name: "Электроника", icon: Smartphone, count: 6644 },
+  { id: "home_cat", name: "Для дома", icon: Sofa, count: 4102 },
+  { id: "personal", name: "Личные вещи", icon: Shirt, count: 3210 },
+  { id: "hobby", name: "Хобби", icon: Bike, count: 1980 },
+  { id: "animals", name: "Животные", icon: PawPrint, count: 932 },
+];
+
+export default function Page() {
+  return (
+    <div className="min-h-screen bg-[#f4f6f9]">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-5 py-3 flex items-center gap-3">
+          <div className="text-2xl font-extrabold text-blue-700 shrink-0">
+            tirgus<span className="text-gray-900">.lv</span>
+          </div>
+          <div className="flex-1 flex items-center bg-gray-100 border border-gray-200 rounded-xl px-4 max-w-lg">
+            <Search size={17} className="text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Найти что угодно…"
+              className="flex-1 bg-transparent border-none outline-none px-3 py-2.5 text-sm"
+            />
+          </div>
+          <button className="bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
+            <Plus size={17} />
+            Подать
+          </button>
+          <button className="relative p-2">
+            <Bell size={20} className="text-gray-500" />
+            <span className="absolute top-1 right-1 w-4 h-4 bg-blue-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+          </button>
+          <button className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-600 flex items-center gap-2">
+            <User size={17} />
+            Кабинет
+          </button>
+        </div>
+        <div className="border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-5 flex gap-1 overflow-x-auto">
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <button key={cat.id} className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:text-blue-700 border-b-2 border-transparent hover:border-blue-700 transition-colors whitespace-nowrap">
+                  <Icon size={15} />
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+      <main className="max-w-6xl mx-auto px-5 py-10">
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
           Найти и продать можно <span className="text-blue-700">всё</span>
         </h1>
-        <p className="text-gray-500 mb-10">
-          Лучшая доска объявлений Латвии
-        </p>
-
-        {/* Категории */}
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { name: "Транспорт", count: "5 310" },
-            { name: "Недвижимость", count: "8 421" },
-            { name: "Работа", count: "2 987" },
-            { name: "Электроника", count: "6 644" },
-            { name: "Для дома", count: "4 102" },
-            { name: "Личные вещи", count: "3 210" },
-            { name: "Хобби", count: "1 980" },
-            { name: "Животные", count: "932" },
-          ].map((cat) => (
-            <div
-              key={cat.name}
-              className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:shadow-sm transition-all"
-            >
-              <div className="font-semibold text-gray-900">{cat.name}</div>
-              <div className="text-sm text-gray-400 mt-1">{cat.count} объявл.</div>
-            </div>
-          ))}
+        <p className="text-gray-500 mb-10">Объявления по всей Латвии — от квартиры до велосипеда.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <button key={cat.id} className="bg-white border border-gray-200 rounded-2xl p-4 text-left hover:border-blue-400 hover:shadow-md transition-all group">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
+                  <Icon size={20} className="text-blue-700" />
+                </div>
+                <div className="font-bold text-gray-900 text-sm">{cat.name}</div>
+                <div className="text-xs text-gray-400 mt-1">{cat.count.toLocaleString("ru-RU")} объявл.</div>
+              </button>
+            );
+          })}
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
