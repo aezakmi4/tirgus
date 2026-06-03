@@ -2,6 +2,7 @@ import { Search, Plus, Bell, User, Car, Home, Briefcase,
          Smartphone, Sofa, Shirt, Bike, PawPrint } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
+export const revalidate = 0;
 const iconMap: Record<string, React.ComponentType<{size?: number, className?: string}>> = {
   transport: Car,
   realty: Home,
@@ -15,9 +16,10 @@ const iconMap: Record<string, React.ComponentType<{size?: number, className?: st
 
 export default async function Page() {
   const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .order('id');
+  .from('categories')
+  .select('*')
+  .order('id')
+  .returns<{id: number, name: string, slug: string, count: number}[]>();
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
