@@ -1,6 +1,7 @@
 import { Search, Plus, Bell, User, Car, Home, Briefcase,
          Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import Link from "next/link";
 
 export const revalidate = 0;
 
@@ -98,7 +99,7 @@ export default async function Page() {
         <h2 className="text-2xl font-extrabold text-gray-900 mt-12 mb-6">Свежие объявления</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {listings?.map((listing) => (
-            <div key={listing.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+            <Link key={listing.id} href={`/listings/${listing.id}`} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
               <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
                 {listing.image_url
                   ? <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
@@ -115,7 +116,7 @@ export default async function Page() {
                   {listing.location}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </main>
