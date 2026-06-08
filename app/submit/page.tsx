@@ -175,7 +175,7 @@ export default function SubmitPage() {
           </div>
 
           {fields.length > 0 && (
-            <div className="border border-blue-100 bg-blue-50 rounded-2xl p-4 flex flex-col gap-4">
+            <div className="border border-gray-200 bg-white rounded-2xl p-4 flex flex-col gap-4">
               <div className="text-sm font-bold text-blue-700">Характеристики</div>
               {fields.map((field) => (
                 <div key={field.name}>
