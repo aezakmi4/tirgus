@@ -143,7 +143,7 @@ export default function SubmitPage() {
 
   const fields = form.category_id ? categoryFields[Number(form.category_id)] || [] : [];
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white";
+  const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white placeholder:text-gray-600 text-gray-900";
   const labelClass = "block text-sm font-bold text-gray-700 mb-1";
 
   return (
