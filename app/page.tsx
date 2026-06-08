@@ -1,8 +1,9 @@
 import { Search, Plus, Bell, User, Car, Home, Briefcase,
-         Smartphone, Sofa, Shirt, Bike, PawPrint } from "lucide-react";
+         Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 export const revalidate = 0;
+
 const iconMap: Record<string, React.ComponentType<{size?: number, className?: string}>> = {
   transport: Car,
   realty: Home,
@@ -14,12 +15,21 @@ const iconMap: Record<string, React.ComponentType<{size?: number, className?: st
   animals: PawPrint,
 };
 
+type Category = { id: number; name: string; slug: string; count: number };
+type Listing  = { id: number; title: string; description: string; price: number | null; currency: string; category_id: number; location: string; image_url: string | null; created_at: string };
+
 export default async function Page() {
   const { data: categories } = await supabase
-  .from('categories')
-  .select('*')
-  .order('id')
-  .returns<{id: number, name: string, slug: string, count: number}[]>();
+    .from('categories')
+    .select('*')
+    .order('id')
+    .returns<Category[]>();
+
+  const { data: listings } = await supabase
+    .from('listings')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .returns<Listing[]>();
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
@@ -63,11 +73,13 @@ export default async function Page() {
           </div>
         </div>
       </header>
+
       <main className="max-w-6xl mx-auto px-5 py-10">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
           Найти и продать можно <span className="text-blue-700">всё</span>
         </h1>
         <p className="text-gray-500 mb-10">Объявления по всей Латвии — от квартиры до велосипеда.</p>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {categories?.map((cat) => {
             const Icon = iconMap[cat.slug] || Car;
@@ -81,6 +93,30 @@ export default async function Page() {
               </button>
             );
           })}
+        </div>
+
+        <h2 className="text-2xl font-extrabold text-gray-900 mt-12 mb-6">Свежие объявления</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {listings?.map((listing) => (
+            <div key={listing.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+              <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
+                {listing.image_url
+                  ? <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
+                  : <span className="text-5xl">📷</span>
+                }
+              </div>
+              <div className="p-3">
+                <div className="font-bold text-gray-900 text-sm mb-1 line-clamp-2">{listing.title}</div>
+                <div className="text-blue-700 font-extrabold text-base mb-2">
+                  {listing.price ? `${listing.price.toLocaleString('ru-RU')} €` : 'Договорная'}
+                </div>
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <MapPin size={11} />
+                  {listing.location}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </main>
     </div>
