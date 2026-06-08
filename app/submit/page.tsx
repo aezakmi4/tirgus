@@ -123,13 +123,26 @@ export default function SubmitPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title || !form.category_id || !form.location) {
-      alert('Заполни название, категорию и город');
-      return;
-    }
-    setLoading(true);
+    if (!form.category_id || !form.location) {
+  alert('Заполни категорию и город');
+  return;
+}
+if (form.category_id !== '1' && !form.title) {
+  alert('Заполни название');
+  return;
+}
+let finalTitle = form.title;
+if (form.category_id === '1') {
+  const parts = [details.brand, details.model, details.engine ? details.engine + 'л' : '', details.year].filter(Boolean);
+  finalTitle = parts.join(' ');
+  if (!finalTitle) {
+    alert('Заполни хотя бы марку и модель');
+    return;
+  }
+}
+setLoading(true);
     const { data, error } = await supabase.from('listings').insert({
-      title: form.title,
+      title: finalTitle,
       description: form.description,
       price: form.price ? Number(form.price) : null,
       category_id: Number(form.category_id),
@@ -161,10 +174,12 @@ export default function SubmitPage() {
 
         <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-5">
 
-          <div>
-            <label className={labelClass}>Название *</label>
-            <input name="title" value={form.title} onChange={handleChange} placeholder="Например: iPhone 14 Pro 256GB" className={inputClass} />
-          </div>
+          {form.category_id !== '1' && (
+  <div>
+    <label className={labelClass}>Название *</label>
+    <input name="title" value={form.title} onChange={handleChange} placeholder="Например: iPhone 14 Pro 256GB" className={inputClass} />
+  </div>
+)}
 
           <div>
             <label className={labelClass}>Категория *</label>
