@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ImagePlus, X } from 'lucide-react';
 
 type Category = { id: number; name: string };
 type Field = { name: string; label: string; type?: string; placeholder?: string; options?: string[] };
@@ -105,6 +105,8 @@ export default function SubmitPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', price: '', category_id: '', location: '' });
   const [details, setDetails] = useState<Record<string, string>>({});
+  const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('id').then(({ data }) => {
@@ -119,6 +121,19 @@ export default function SubmitPage() {
 
   function handleDetailChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setDetails({ ...details, [e.target.name]: e.target.value });
+  }
+
+  function handlePhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files || []);
+    setPhotos((prev) => [...prev, ...selected.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    e.target.value = ''; // позволяет выбрать тот же файл повторно
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => {
+      URL.revokeObjectURL(prev[index].url);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -141,6 +156,27 @@ if (form.category_id === '1') {
   }
 }
 setLoading(true);
+
+    // Загружаем выбранные фото в Storage и собираем публичные ссылки
+    const imageUrls: string[] = [];
+    if (photos.length > 0) {
+      setUploading(true);
+      for (const { file } of photos) {
+        const ext = file.name.includes('.') ? file.name.split('.').pop() : '';
+        const path = ext ? `${crypto.randomUUID()}.${ext}` : crypto.randomUUID();
+        const { error: uploadError } = await supabase.storage.from('listing-images').upload(path, file);
+        if (uploadError) {
+          alert('Ошибка загрузки фото: ' + uploadError.message);
+          setUploading(false);
+          setLoading(false);
+          return;
+        }
+        const { data: pub } = supabase.storage.from('listing-images').getPublicUrl(path);
+        imageUrls.push(pub.publicUrl);
+      }
+      setUploading(false);
+    }
+
     const { data, error } = await supabase.from('listings').insert({
       title: finalTitle,
       description: form.description,
@@ -148,6 +184,7 @@ setLoading(true);
       category_id: Number(form.category_id),
       location: form.location,
       details: Object.keys(details).length > 0 ? details : null,
+      ...(imageUrls.length > 0 ? { images: imageUrls, image_url: imageUrls[0] } : {}),
     }).select().single();
     setLoading(false);
     if (error) { alert('Ошибка: ' + error.message); return; }
@@ -209,6 +246,30 @@ setLoading(true);
           )}
 
           <div>
+            <label className={labelClass}>Фото</label>
+            <label className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 text-sm font-semibold text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-700 transition-colors">
+              <ImagePlus size={18} /> Добавить фото
+              <input type="file" multiple accept="image/*" onChange={handlePhotos} className="hidden" />
+            </label>
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+                {photos.map((photo, i) => (
+                  <div key={photo.url} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                    <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
             <label className={labelClass}>Описание</label>
             <textarea name="description" value={form.description} onChange={handleChange} placeholder="Расскажи подробнее..." rows={4} className={`${inputClass} resize-none`} />
           </div>
@@ -223,8 +284,8 @@ setLoading(true);
             <input name="location" value={form.location} onChange={handleChange} placeholder="Rīga, Daugavpils, Liepāja..." className={inputClass} />
           </div>
 
-          <button onClick={handleSubmit} disabled={loading} className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors disabled:opacity-50">
-            {loading ? 'Публикуем…' : 'Опубликовать объявление'}
+          <button onClick={handleSubmit} disabled={loading || uploading} className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors disabled:opacity-50">
+            {uploading ? 'Загружаем фото…' : loading ? 'Публикуем…' : 'Опубликовать объявление'}
           </button>
 
         </div>
