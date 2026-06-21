@@ -1,5 +1,6 @@
 import { Search, Plus, Bell, User, Car, Home, Briefcase,
-         Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin } from "lucide-react";
+         Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin,
+         Heart, Clock, ImageOff } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import HeroSearch from "./components/HeroSearch";
 import Link from "next/link";
@@ -63,6 +64,8 @@ export default async function Page() {
   const jobsCount      = categories?.find((c) => c.slug === "jobs")?.count ?? 0;
   const numCategories  = categories?.length ?? 0;
   const fmt = (n: number) => n.toLocaleString("ru-RU");
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
@@ -168,23 +171,28 @@ export default async function Page() {
         </div>
 
         <h2 className="text-2xl font-extrabold text-gray-900 mt-12 mb-6">Свежие объявления</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid-cards">
           {listings?.map((listing) => (
-            <Link key={listing.id} href={`/listings/${listing.id}`} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
-              <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
+            <Link key={listing.id} href={`/listings/${listing.id}`} className="card">
+              <div className="media">
                 {listing.image_url
-                  ? <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
-                  : <span className="text-5xl">📷</span>
+                  ? <img src={listing.image_url} alt={listing.title} />
+                  : <div className="card-ph"><ImageOff size={28} /></div>
                 }
+                {/* сердечко — пока только визуально, без сохранения */}
+                <span className="save" aria-hidden="true"><Heart size={18} /></span>
               </div>
-              <div className="p-3">
-                <div className="font-bold text-gray-900 text-sm mb-1 line-clamp-2">{listing.title}</div>
-                <div className="text-blue-700 font-extrabold text-base mb-2">
+              <div className="cbody">
+                <div className="price">
                   {listing.price ? `${listing.price.toLocaleString('ru-RU')} €` : 'Договорная'}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  <MapPin size={11} />
-                  {listing.location}
+                <p className="title">{listing.title}</p>
+                <hr className="hr" />
+                <div className="card-foot">
+                  <div className="card-foot-loc">
+                    <span><MapPin size={13} />{listing.location}</span>
+                    <span><Clock size={13} />{formatDate(listing.created_at)}</span>
+                  </div>
                 </div>
               </div>
             </Link>
