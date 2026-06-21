@@ -1,9 +1,9 @@
 import { Car, Home, Briefcase,
-         Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin,
-         Heart, Clock, ImageOff } from "lucide-react";
+         Smartphone, Sofa, Shirt, Bike, PawPrint } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import SiteHeader from "./components/SiteHeader";
 import HeroSearch from "./components/HeroSearch";
+import ListingCard, { Listing } from "./components/ListingCard";
 import Link from "next/link";
 
 export const revalidate = 0;
@@ -44,7 +44,6 @@ const catSubs: Record<string, string[]> = {
 };
 
 type Category = { id: number; name: string; slug: string; count: number };
-type Listing  = { id: number; title: string; description: string; price: number | null; currency: string; category_id: number; location: string; image_url: string | null; created_at: string };
 
 export default async function Page() {
   const { data: categories } = await supabase
@@ -65,8 +64,6 @@ export default async function Page() {
   const jobsCount      = categories?.find((c) => c.slug === "jobs")?.count ?? 0;
   const numCategories  = categories?.length ?? 0;
   const fmt = (n: number) => n.toLocaleString("ru-RU");
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
@@ -111,14 +108,14 @@ export default async function Page() {
             <h2>Категории</h2>
             <p>Выбери раздел — от авто до животных, по всей Латвии</p>
           </div>
-          <Link href="/?category=all" className="sec-head-link">Все категории →</Link>
+          <Link href="/search" className="sec-head-link">Все категории →</Link>
         </div>
         <div className="cat-grid">
           {categories?.map((cat) => {
             const Icon = iconMap[cat.slug] || Car;
             const subs = catSubs[cat.slug] || [];
             return (
-              <Link key={cat.id} href={`/?category=${cat.slug}`} className="cat-card">
+              <Link key={cat.id} href={`/search?category=${cat.slug}`} className="cat-card">
                 <div className="cat-ic" style={{ background: catColors[cat.slug] ?? catColors.transport }}>
                   <Icon size={26} />
                 </div>
@@ -135,29 +132,7 @@ export default async function Page() {
         <h2 className="text-2xl font-extrabold text-gray-900 mt-12 mb-6">Свежие объявления</h2>
         <div className="grid-cards">
           {listings?.map((listing) => (
-            <Link key={listing.id} href={`/listings/${listing.id}`} className="card">
-              <div className="media">
-                {listing.image_url
-                  ? <img src={listing.image_url} alt={listing.title} />
-                  : <div className="card-ph"><ImageOff size={28} /></div>
-                }
-                {/* сердечко — пока только визуально, без сохранения */}
-                <span className="save" aria-hidden="true"><Heart size={18} /></span>
-              </div>
-              <div className="cbody">
-                <div className="price">
-                  {listing.price ? `${listing.price.toLocaleString('ru-RU')} €` : 'Договорная'}
-                </div>
-                <p className="title">{listing.title}</p>
-                <hr className="hr" />
-                <div className="card-foot">
-                  <div className="card-foot-loc">
-                    <span><MapPin size={13} />{listing.location}</span>
-                    <span><Clock size={13} />{formatDate(listing.created_at)}</span>
-                  </div>
-                </div>
-              </div>
-            </Link>
+            <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       </main>

@@ -21,7 +21,7 @@ export default function HeroSearch() {
   const search = (term?: string) => {
     const value = (term ?? q).trim();
     if (!value) return;
-    router.push(`/?q=${encodeURIComponent(value)}`);
+    router.push(`/search?q=${encodeURIComponent(value)}`);
   };
 
   return (

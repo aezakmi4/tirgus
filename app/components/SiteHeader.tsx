@@ -20,7 +20,7 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
   const submit = () => {
     const value = q.trim();
     if (!value) return;
-    router.push(`/?q=${encodeURIComponent(value)}`);
+    router.push(`/search?q=${encodeURIComponent(value)}`);
     setSearchOpen(false);
   };
 
@@ -34,11 +34,11 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
 
         <nav className="nav-desk">
           {categories.slice(0, 4).map((c) => (
-            <Link key={c.id} href={`/?category=${c.slug}`} className="nav-link">
+            <Link key={c.id} href={`/search?category=${c.slug}`} className="nav-link">
               {c.name}
             </Link>
           ))}
-          <Link href="/?category=all" className="nav-link">Все</Link>
+          <Link href="/search" className="nav-link">Все</Link>
         </nav>
 
         <div className="flex items-center gap-1 ml-auto">
