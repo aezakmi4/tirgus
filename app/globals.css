@@ -48,6 +48,8 @@ body {
   --bg-2: #eef1f8;
   --glass: rgba(255,255,255,.66);
   --glass-brd: rgba(255,255,255,.7);
+  --header-bg: rgba(255,255,255,.72);
+  --hover: #f1f4fb;
 
   /* радиусы / тени / motion */
   --r-pill: 999px;
@@ -255,3 +257,76 @@ body {
   display: inline-flex; align-items: center; gap: 4px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* ============================================================
+   HEADER — перенесено из design-reference, светлая тема
+   ============================================================ */
+header.app {
+  position: sticky; top: 0; z-index: 60;
+  background: var(--header-bg);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex; align-items: center; gap: 10px; flex: none;
+  font-weight: 800; font-size: 21px; letter-spacing: -.03em; color: var(--ink);
+}
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none;
+  background: linear-gradient(135deg, var(--blue-700), var(--violet)); box-shadow: var(--shadow-blue);
+}
+.brand-mark span { width: 12px; height: 12px; border-radius: 4px; background: #fff; transform: rotate(45deg); }
+.brand-dim { color: var(--ink-3); font-weight: 700; }
+
+.nav-desk { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav-desk::-webkit-scrollbar { display: none; }
+.nav-link {
+  height: 36px; padding: 0 11px; display: inline-flex; align-items: center; border-radius: var(--r-pill);
+  font-size: 13.5px; font-weight: 600; color: var(--ink-3); white-space: nowrap; transition: all .18s var(--ease);
+}
+.nav-link:hover { color: var(--ink); background: var(--hover); }
+
+.iconbtn {
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  color: var(--ink-2); position: relative; background: none; border: none; cursor: pointer;
+  transition: all .2s var(--ease);
+}
+.iconbtn:hover { background: var(--hover); color: var(--ink); }
+
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; cursor: pointer;
+  background: linear-gradient(135deg, #5b7cff, #22d3ee); color: #fff;
+  border: 2px solid var(--surface); box-shadow: var(--shadow-sm);
+}
+
+.post-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px; flex: none;
+  border-radius: var(--r-pill); font-weight: 600; font-size: 14px; color: #fff; white-space: nowrap;
+  background: linear-gradient(100deg, var(--blue-700), var(--electric) 60%, var(--violet));
+  box-shadow: var(--shadow-blue); transition: filter .2s var(--ease);
+}
+.post-btn:hover { filter: brightness(1.08); }
+
+/* разворачивающийся поиск */
+.header-search {
+  max-height: 0; overflow: hidden; border-top: 0 solid var(--line); background: var(--header-bg);
+  transition: max-height .3s var(--ease), border-top-width .3s;
+}
+.header-search.open { max-height: 80px; border-top: 1px solid var(--line); }
+.header-search-inner { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+.header-search-inner input {
+  flex: 1; border: none; outline: none; background: none; font-size: 16px; color: var(--ink); font-weight: 500; min-width: 0;
+}
+.header-search-inner input::placeholder { color: var(--ink-4); }
+.header-search-go {
+  flex: none; height: 40px; padding: 0 20px; border: none; border-radius: var(--r-pill); cursor: pointer;
+  font-weight: 600; font-size: 14px; color: #fff;
+  background: linear-gradient(100deg, var(--blue-700), var(--electric) 60%, var(--violet));
+  box-shadow: var(--shadow-blue); transition: filter .2s var(--ease);
+}
+.header-search-go:hover { filter: brightness(1.08); }
+
+@media (max-width: 860px) { .nav-desk { display: none; } }
+@media (max-width: 560px) { .post-label { display: none; } .post-btn { padding: 0; width: 42px; justify-content: center; } }

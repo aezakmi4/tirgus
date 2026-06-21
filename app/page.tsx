@@ -1,7 +1,8 @@
-import { Search, Plus, Bell, User, Car, Home, Briefcase,
+import { Car, Home, Briefcase,
          Smartphone, Sofa, Shirt, Bike, PawPrint, MapPin,
          Heart, Clock, ImageOff } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import SiteHeader from "./components/SiteHeader";
 import HeroSearch from "./components/HeroSearch";
 import Link from "next/link";
 
@@ -69,46 +70,7 @@ export default async function Page() {
 
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-5 py-3 flex items-center gap-3">
-          <div className="text-2xl font-extrabold text-blue-700 shrink-0">
-            tirgus<span className="text-gray-900">.lv</span>
-          </div>
-          <div className="flex-1 flex items-center bg-gray-100 border border-gray-200 rounded-xl px-4 max-w-lg">
-            <Search size={17} className="text-gray-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Найти что угодно…"
-              className="flex-1 bg-transparent border-none outline-none px-3 py-2.5 text-sm"
-            />
-          </div>
-          <button className="bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-            <Plus size={17} />
-            Подать
-          </button>
-          <button className="relative p-2">
-            <Bell size={20} className="text-gray-500" />
-            <span className="absolute top-1 right-1 w-4 h-4 bg-blue-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
-          </button>
-          <button className="border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-600 flex items-center gap-2">
-            <User size={17} />
-            Кабинет
-          </button>
-        </div>
-        <div className="border-t border-gray-100">
-          <div className="max-w-6xl mx-auto px-5 flex gap-1 overflow-x-auto">
-            {categories?.map((cat) => {
-              const Icon = iconMap[cat.slug] || Car;
-              return (
-                <button key={cat.id} className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:text-blue-700 border-b-2 border-transparent hover:border-blue-700 transition-colors whitespace-nowrap">
-                  <Icon size={15} />
-                  {cat.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </header>
+      <SiteHeader categories={categories ?? []} />
 
       {/* ===== HERO ===== */}
       <section className="hero">
