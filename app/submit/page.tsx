@@ -119,8 +119,8 @@ setLoading(true);
 
   const fields = form.category_id ? categoryFields[Number(form.category_id)] || [] : [];
 
-  const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white placeholder:text-gray-400 placeholder:italic text-gray-900";
-  const labelClass = "block text-sm font-bold text-gray-700 mb-1";
+  const inputClass = "form-input";
+  const labelClass = "field-label";
 
   // Общая шапка с кнопкой «Назад» — используется во всех состояниях страницы.
   const PageHeader = (
@@ -149,16 +149,16 @@ setLoading(true);
       <div className="min-h-screen bg-[#f4f6f9]">
         {PageHeader}
         <main className="max-w-2xl mx-auto px-5 py-8">
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-6">Подать объявление</h1>
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col items-center text-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 grid place-items-center">
+          <h1 className="text-[26px] font-extrabold tracking-tight text-gray-900 mb-6">Подать объявление</h1>
+          <div className="form-card flex flex-col items-center text-center gap-4">
+            <div className="w-14 h-14 rounded-2xl grid place-items-center text-[var(--blue-700)]" style={{ background: '#eef2fc' }}>
               <LogIn size={26} />
             </div>
             <div>
               <div className="text-lg font-extrabold text-gray-900">Войдите, чтобы подать объявление</div>
               <p className="text-sm text-gray-500 mt-1">Объявление будет привязано к вашему аккаунту.</p>
             </div>
-            <Link href="/login" className="post-btn justify-center !h-12 w-full max-w-xs">
+            <Link href="/login" className="btn btn-grad btn-lg w-full max-w-xs">
               Войти
             </Link>
             <p className="text-sm text-gray-500">
@@ -176,9 +176,9 @@ setLoading(true);
       {PageHeader}
 
       <main className="max-w-2xl mx-auto px-5 py-8">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-6">Подать объявление</h1>
+        <h1 className="text-[26px] font-extrabold tracking-tight text-gray-900 mb-6">Подать объявление</h1>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-5">
+        <div className="form-card flex flex-col gap-5">
 
           {form.category_id !== '1' && (
   <div>
@@ -196,8 +196,8 @@ setLoading(true);
           </div>
 
           {fields.length > 0 && (
-            <div className="border border-gray-200 bg-white rounded-2xl p-4 flex flex-col gap-4">
-              <div className="text-sm font-bold text-blue-700">Характеристики</div>
+            <div className="form-subcard flex flex-col gap-4">
+              <div className="form-subcard-title">Характеристики</div>
               {fields.map((field) => (
                 <div key={field.name}>
                   <label className={labelClass}>{field.label}</label>
@@ -216,7 +216,7 @@ setLoading(true);
 
           <div>
             <label className={labelClass}>Фото</label>
-            <label className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 text-sm font-semibold text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-700 transition-colors">
+            <label className="photo-up">
               <ImagePlus size={18} /> Добавить фото
               <input type="file" multiple accept="image/*" onChange={handlePhotos} className="hidden" />
             </label>
@@ -253,7 +253,7 @@ setLoading(true);
             <input name="location" value={form.location} onChange={handleChange} placeholder="Rīga, Daugavpils, Liepāja..." className={inputClass} />
           </div>
 
-          <button onClick={handleSubmit} disabled={loading || uploading} className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors disabled:opacity-50">
+          <button onClick={handleSubmit} disabled={loading || uploading} className="btn btn-grad btn-lg w-full disabled:opacity-50">
             {uploading ? 'Загружаем фото…' : loading ? 'Публикуем…' : 'Опубликовать объявление'}
           </button>
 
