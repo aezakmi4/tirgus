@@ -1,5 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, MapPin, Calendar, Tag } from "lucide-react";
+import ListingGallery from "../../components/ListingGallery";
 import Link from "next/link";
 
 const fieldLabels: Record<string, string> = {
@@ -58,11 +59,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       <main className="max-w-4xl mx-auto px-5 py-8">
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
 
-          <div className="w-full h-72 bg-gray-100 flex items-center justify-center">
-            {listing.image_url
-              ? <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
-              : <span className="text-8xl">📷</span>
-            }
+          <div className="p-5 pb-0">
+            <ListingGallery images={listing.images} imageUrl={listing.image_url} title={listing.title} />
           </div>
 
           <div className="p-6">
