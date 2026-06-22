@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { createClient } from '../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ImagePlus, X } from 'lucide-react';
+import { ArrowLeft, ImagePlus, X, LogIn } from 'lucide-react';
 
 type Category = { id: number; name: string };
 type Field = { name: string; label: string; type?: string; placeholder?: string; options?: string[] };
@@ -101,6 +101,10 @@ const categoryFields: Record<number, Field[]> = {
 
 export default function SubmitPage() {
   const router = useRouter();
+  // Аутентифицированный клиент: под ним сработает RLS-правило user_id = auth.uid().
+  const [supabase] = useState(() => createClient());
+  // Состояние входа: undefined — ещё проверяем, null — гость, иначе вошедший пользователь.
+  const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', price: '', category_id: '', location: '' });
@@ -109,10 +113,18 @@ export default function SubmitPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [supabase]);
+
+  useEffect(() => {
     supabase.from('categories').select('*').order('id').then(({ data }) => {
       if (data) setCategories(data as Category[]);
     });
-  }, []);
+  }, [supabase]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     if (e.target.name === 'category_id') setDetails({});
@@ -138,6 +150,10 @@ export default function SubmitPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!userId) {
+      alert('Войдите, чтобы подать объявление');
+      return;
+    }
     if (!form.category_id || !form.location) {
   alert('Заполни категорию и город');
   return;
@@ -184,6 +200,7 @@ setLoading(true);
       category_id: Number(form.category_id),
       location: form.location,
       details: Object.keys(details).length > 0 ? details : null,
+      user_id: userId,
       ...(imageUrls.length > 0 ? { images: imageUrls, image_url: imageUrls[0] } : {}),
     }).select().single();
     setLoading(false);
@@ -196,15 +213,58 @@ setLoading(true);
   const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 bg-white placeholder:text-gray-400 placeholder:italic text-gray-900";
   const labelClass = "block text-sm font-bold text-gray-700 mb-1";
 
+  // Общая шапка с кнопкой «Назад» — используется во всех состояниях страницы.
+  const PageHeader = (
+    <header className="bg-white border-b border-gray-200">
+      <div className="max-w-2xl mx-auto px-5 py-4">
+        <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-blue-700 transition-colors text-sm font-semibold">
+          <ArrowLeft size={18} /> Назад
+        </Link>
+      </div>
+    </header>
+  );
+
+  // Ещё проверяем сессию — лёгкий placeholder, чтобы не мигало.
+  if (userId === undefined) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f9]">
+        {PageHeader}
+        <main className="max-w-2xl mx-auto px-5 py-8 text-gray-400 text-sm">Загрузка…</main>
+      </div>
+    );
+  }
+
+  // Гость — форму не показываем, предлагаем войти.
+  if (userId === null) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f9]">
+        {PageHeader}
+        <main className="max-w-2xl mx-auto px-5 py-8">
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-6">Подать объявление</h1>
+          <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col items-center text-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 grid place-items-center">
+              <LogIn size={26} />
+            </div>
+            <div>
+              <div className="text-lg font-extrabold text-gray-900">Войдите, чтобы подать объявление</div>
+              <p className="text-sm text-gray-500 mt-1">Объявление будет привязано к вашему аккаунту.</p>
+            </div>
+            <Link href="/login" className="post-btn justify-center !h-12 w-full max-w-xs">
+              Войти
+            </Link>
+            <p className="text-sm text-gray-500">
+              Нет аккаунта?{' '}
+              <Link href="/register" className="font-bold text-blue-700 hover:underline">Зарегистрироваться</Link>
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-5 py-4">
-          <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-blue-700 transition-colors text-sm font-semibold">
-            <ArrowLeft size={18} /> Назад
-          </Link>
-        </div>
-      </header>
+      {PageHeader}
 
       <main className="max-w-2xl mx-auto px-5 py-8">
         <h1 className="text-2xl font-extrabold text-gray-900 mb-6">Подать объявление</h1>
