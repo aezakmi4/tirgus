@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, LogIn } from 'lucide-react';
+import { ArrowLeft, LogIn, ImagePlus, X } from 'lucide-react';
 import { createClient } from '../../../lib/supabaseClient';
 import { categoryFields } from '../../../lib/categoryFields';
+import { uploadListingImages } from '../../../lib/uploadListingImages';
 
 type Category = { id: number; name: string };
 
@@ -26,6 +27,11 @@ export default function EditListingPage() {
 
   const [form, setForm] = useState({ title: '', description: '', price: '', category_id: '', location: '' });
   const [details, setDetails] = useState<Record<string, string>>({});
+
+  // Фото: существующие (уже URL) и новые (файлы для загрузки) — раздельно.
+  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [newPhotos, setNewPhotos] = useState<{ file: File; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -64,8 +70,27 @@ export default function EditListingPage() {
           location: data.location ?? '',
         });
         setDetails((data.details as Record<string, string>) ?? {});
+        // Существующие фото: массив images, иначе одиночная обложка (для старых объявлений).
+        setExistingPhotos((data.images as string[] | null) ?? (data.image_url ? [data.image_url] : []));
       });
   }, [supabase, userId, id]);
+
+  function handleNewPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files || []);
+    setNewPhotos((prev) => [...prev, ...selected.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    e.target.value = ''; // позволяет выбрать тот же файл повторно
+  }
+
+  function removeExisting(index: number) {
+    setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removeNew(index: number) {
+    setNewPhotos((prev) => {
+      URL.revokeObjectURL(prev[index].url);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     if (e.target.name === 'category_id') setDetails({});
@@ -96,8 +121,27 @@ export default function EditListingPage() {
       }
     }
     setLoading(true);
-    // ВАЖНО: images / image_url / user_id НЕ включаем — Supabase обновляет только
-    // переданные колонки, поэтому фото и автор остаются нетронутыми.
+
+    // Грузим ТОЛЬКО новые файлы; старые уже URL — повторно не загружаем.
+    let newUrls: string[] = [];
+    if (newPhotos.length > 0) {
+      setUploading(true);
+      try {
+        newUrls = await uploadListingImages(supabase, newPhotos.map((p) => p.file));
+      } catch (err) {
+        setUploading(false);
+        setLoading(false);
+        alert('Ошибка загрузки фото: ' + (err as Error).message);
+        return; // в БД не пишем, если загрузка не удалась
+      }
+      setUploading(false);
+    }
+
+    const finalImages = [...existingPhotos, ...newUrls]; // оставшиеся старые + новые, в порядке отображения
+    const cover = finalImages[0] ?? null;                // обложка или null, если фото не осталось
+
+    // user_id НЕ включаем — Supabase обновляет только переданные колонки, автор не трогается.
+    // images / image_url теперь обновляем намеренно.
     const { error } = await supabase.from('listings').update({
       title: finalTitle,
       description: form.description,
@@ -105,6 +149,8 @@ export default function EditListingPage() {
       category_id: Number(form.category_id),
       location: form.location,
       details: Object.keys(details).length > 0 ? details : null,
+      images: finalImages,
+      image_url: cover,
     }).eq('id', id);
     setLoading(false);
     if (error) { alert('Ошибка: ' + error.message); return; }
@@ -236,7 +282,43 @@ export default function EditListingPage() {
             </div>
           )}
 
-          {/* Фото в этом шаге не редактируются — остаются как есть. */}
+          <div>
+            <label className={labelClass}>Фото</label>
+            <label className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 text-sm font-semibold text-gray-500 cursor-pointer hover:border-blue-400 hover:text-blue-700 transition-colors">
+              <ImagePlus size={18} /> Добавить фото
+              <input type="file" multiple accept="image/*" onChange={handleNewPhotos} className="hidden" />
+            </label>
+            {(existingPhotos.length > 0 || newPhotos.length > 0) && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+                {/* Существующие фото (URL) */}
+                {existingPhotos.map((url, i) => (
+                  <div key={url} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeExisting(i)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                {/* Новые фото (превью до загрузки) */}
+                {newPhotos.map((photo, i) => (
+                  <div key={photo.url} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                    <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeNew(i)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div>
             <label className={labelClass}>Описание</label>
@@ -253,8 +335,8 @@ export default function EditListingPage() {
             <input name="location" value={form.location} onChange={handleChange} placeholder="Rīga, Daugavpils, Liepāja..." className={inputClass} />
           </div>
 
-          <button onClick={handleSubmit} disabled={loading} className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors disabled:opacity-50">
-            {loading ? 'Сохраняем…' : 'Сохранить изменения'}
+          <button onClick={handleSubmit} disabled={loading || uploading} className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors disabled:opacity-50">
+            {uploading ? 'Загружаем фото…' : loading ? 'Сохраняем…' : 'Сохранить изменения'}
           </button>
 
         </div>
