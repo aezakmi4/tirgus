@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { MapPin, Clock, Heart, ImageOff } from "lucide-react";
+import { MapPin, Clock, ImageOff } from "lucide-react";
+import FavoriteButton from "./FavoriteButton";
 
 export type Listing = {
   id: number;
@@ -16,7 +17,17 @@ export type Listing = {
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
 
-export default function ListingCard({ listing }: { listing: Listing }) {
+export default function ListingCard({
+  listing,
+  isFavorite = false,
+  isAuthed = false,
+  refreshOnToggle = false,
+}: {
+  listing: Listing;
+  isFavorite?: boolean;
+  isAuthed?: boolean;
+  refreshOnToggle?: boolean;
+}) {
   return (
     <Link href={`/listings/${listing.id}`} className="card">
       <div className="media">
@@ -24,8 +35,12 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           ? <img src={listing.image_url} alt={listing.title} />
           : <div className="card-ph"><ImageOff size={28} /></div>
         }
-        {/* сердечко — пока только визуально, без сохранения */}
-        <span className="save" aria-hidden="true"><Heart size={18} /></span>
+        <FavoriteButton
+          listingId={listing.id}
+          initialFavorite={isFavorite}
+          isAuthed={isAuthed}
+          refreshOnToggle={refreshOnToggle}
+        />
       </div>
       <div className="cbody">
         <div className="price">

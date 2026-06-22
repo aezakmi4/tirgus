@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase";
 import SiteHeader from "../components/SiteHeader";
 import ListingCard, { Listing } from "../components/ListingCard";
+import { getFavoriteContext } from "../lib/favorites";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 
@@ -41,6 +42,9 @@ export default async function SearchPage({
   const results = listings ?? [];
   const hasFilter = Boolean(q || activeCategory);
 
+  // Один запрос на страницу: избранное текущего пользователя для сердечек.
+  const { isAuthed, favIds } = await getFavoriteContext();
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
       <SiteHeader categories={categories ?? []} />
@@ -72,7 +76,12 @@ export default async function SearchPage({
         ) : (
           <div className="grid-cards">
             {results.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                isFavorite={favIds.has(listing.id)}
+                isAuthed={isAuthed}
+              />
             ))}
           </div>
         )}

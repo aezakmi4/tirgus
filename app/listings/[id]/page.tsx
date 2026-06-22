@@ -1,6 +1,8 @@
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, MapPin, Calendar, Tag } from "lucide-react";
 import ListingGallery from "../../components/ListingGallery";
+import FavoriteButton from "../../components/FavoriteButton";
+import { getFavoriteContext } from "../../lib/favorites";
 import Link from "next/link";
 
 const fieldLabels: Record<string, string> = {
@@ -46,6 +48,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const details = listing.details as Record<string, string> | null;
 
+  // Состояние избранного для этого объявления (один запрос).
+  const { isAuthed, favIds } = await getFavoriteContext();
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
       <header className="bg-white border-b border-gray-200">
@@ -66,7 +71,16 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <div className="p-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div className="flex-1">
-                <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{listing.title}</h1>
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h1 className="text-2xl font-extrabold text-gray-900">{listing.title}</h1>
+                  <FavoriteButton
+                    listingId={listing.id}
+                    initialFavorite={favIds.has(listing.id)}
+                    isAuthed={isAuthed}
+                    size={20}
+                    className="flex-none w-11 h-11 rounded-full border border-gray-200 grid place-items-center text-gray-500 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                  />
+                </div>
                 <div className="text-3xl font-extrabold text-blue-700 mb-4">
                   {listing.price ? `${listing.price.toLocaleString('ru-RU')} €` : 'Договорная'}
                 </div>

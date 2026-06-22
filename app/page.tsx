@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabase";
 import SiteHeader from "./components/SiteHeader";
 import HeroSearch from "./components/HeroSearch";
 import ListingCard, { Listing } from "./components/ListingCard";
+import { getFavoriteContext } from "./lib/favorites";
 import Link from "next/link";
 
 export const revalidate = 0;
@@ -57,6 +58,9 @@ export default async function Page() {
     .select('*')
     .order('created_at', { ascending: false })
     .returns<Listing[]>();
+
+  // Один запрос на страницу: избранное текущего пользователя для сердечек.
+  const { isAuthed, favIds } = await getFavoriteContext();
 
   // Реальные цифры для статистики — считаем из уже загруженных категорий, ничего не выдумываем.
   const totalAds       = categories?.reduce((s, c) => s + (c.count || 0), 0) ?? 0;
@@ -132,7 +136,12 @@ export default async function Page() {
         <h2 className="text-2xl font-extrabold text-gray-900 mt-12 mb-6">Свежие объявления</h2>
         <div className="grid-cards">
           {listings?.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              isFavorite={favIds.has(listing.id)}
+              isAuthed={isAuthed}
+            />
           ))}
         </div>
       </main>

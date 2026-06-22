@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Bell, X, LogOut, ClipboardList } from "lucide-react";
+import { Search, Plus, Bell, X, LogOut, ClipboardList, Heart } from "lucide-react";
 import { createClient } from "../lib/supabaseClient";
 
 type NavCategory = { id: number; name: string; slug: string };
@@ -126,6 +126,19 @@ export default function SiteHeader({ categories }: { categories: NavCategory[] }
                     onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                   >
                     <ClipboardList size={17} /> Мои объявления
+                  </Link>
+                  <Link
+                    href="/favorites"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8, width: "100%",
+                      padding: "9px 10px", borderRadius: 10,
+                      fontSize: 14, fontWeight: 600, color: "var(--ink-2)",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--hover)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                  >
+                    <Heart size={17} /> Избранное
                   </Link>
                   <button
                     onClick={signOut}
