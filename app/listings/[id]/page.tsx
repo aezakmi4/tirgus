@@ -1,7 +1,8 @@
 import { supabase } from "../../lib/supabase";
-import { ArrowLeft, MapPin, Calendar, Tag, Phone, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Tag, Phone } from "lucide-react";
 import ListingGallery from "../../components/ListingGallery";
 import FavoriteButton from "../../components/FavoriteButton";
+import ContactSellerButton from "../../components/ContactSellerButton";
 import { getFavoriteContext } from "../../lib/favorites";
 import { categoryFields } from "../../lib/categoryFields";
 import Link from "next/link";
@@ -49,8 +50,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const details = listing.details as Record<string, string> | null;
 
-  // Состояние избранного для этого объявления (один запрос).
-  const { isAuthed, favIds } = await getFavoriteContext();
+  // Состояние избранного + текущий пользователь (один запрос).
+  const { isAuthed, userId, favIds } = await getFavoriteContext();
+
+  // Кнопку «Написать продавцу» показываем, только если у объявления есть автор
+  // и это не я (писать самому себе нельзя; гостю кнопка ведёт на /login).
+  const sellerId = listing.user_id as string | null;
+  const showContact = Boolean(sellerId) && sellerId !== userId;
 
   // Характеристики: подписи по name из categoryFields, в порядке полей категории
   // (fallback — таблица fieldLabels, затем сам ключ).
@@ -132,9 +138,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   className="flex-none w-11 h-11 rounded-full border border-gray-200 grid place-items-center text-gray-500 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
                 />
               </div>
-              <button type="button" title="Скоро" className="btn btn-grad btn-lg" style={{ width: '100%', marginTop: 18 }}>
-                <MessageCircle size={18} /> Написать продавцу
-              </button>
+              {showContact && (
+                <ContactSellerButton listingId={listing.id} sellerId={sellerId!} isAuthed={isAuthed} />
+              )}
               <button type="button" title="Скоро" className="btn btn-ghost btn-lg" style={{ width: '100%', marginTop: 10 }}>
                 <Phone size={17} /> Позвонить
               </button>
