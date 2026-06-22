@@ -1,8 +1,9 @@
 import { supabase } from "../../lib/supabase";
-import { ArrowLeft, MapPin, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Tag, Phone, MessageCircle } from "lucide-react";
 import ListingGallery from "../../components/ListingGallery";
 import FavoriteButton from "../../components/FavoriteButton";
 import { getFavoriteContext } from "../../lib/favorites";
+import { categoryFields } from "../../lib/categoryFields";
 import Link from "next/link";
 
 const fieldLabels: Record<string, string> = {
@@ -51,74 +52,92 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   // Состояние избранного для этого объявления (один запрос).
   const { isAuthed, favIds } = await getFavoriteContext();
 
+  // Характеристики: подписи по name из categoryFields, в порядке полей категории
+  // (fallback — таблица fieldLabels, затем сам ключ).
+  const fieldDefs = categoryFields[listing.category_id] || [];
+  const labelOf = (key: string) =>
+    fieldDefs.find((f) => f.name === key)?.label || fieldLabels[key] || key;
+  const specKeys = [
+    ...fieldDefs.map((f) => f.name),
+    ...Object.keys(details || {}).filter((k) => !fieldDefs.some((f) => f.name === k)),
+  ].filter((k) => details?.[k]);
+
   return (
     <div className="min-h-screen bg-[#f4f6f9]">
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-5 py-4">
+        <div className="max-w-6xl mx-auto px-5 py-4">
           <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-blue-700 transition-colors text-sm font-semibold">
             <ArrowLeft size={18} /> Назад
           </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-5 py-8">
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-
-          <div className="p-5 pb-0">
+      <main className="max-w-6xl mx-auto px-5 py-8">
+        <div className="listing-layout">
+          {/* ЛЕВО: галерея + контент */}
+          <div>
             <ListingGallery images={listing.images} imageUrl={listing.image_url} title={listing.title} />
+
+            <div className="lst-head">
+              <h1>{listing.title}</h1>
+              <div className="lst-submeta">
+                <span className="row"><MapPin size={15} />{listing.location}</span>
+                <span className="d" />
+                <span className="row"><Calendar size={15} />{new Date(listing.created_at).toLocaleDateString('ru-RU')}</span>
+                {category?.name && (
+                  <>
+                    <span className="d" />
+                    <span className="row"><Tag size={15} />{category.name}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {details && specKeys.length > 0 && (
+              <div className="lst-specs">
+                <div className="lst-spec-grp">
+                  <h3>Характеристики</h3>
+                  <div className="lst-spec-grid">
+                    {specKeys.map((key) => (
+                      <div key={key} className="lst-spec-row">
+                        <span className="k">{labelOf(key)}</span>
+                        <span className="v">{details[key]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {listing.description && (
+              <div className="lst-prose">
+                <h3>Описание</h3>
+                <p>{listing.description}</p>
+              </div>
+            )}
           </div>
 
-          <div className="p-6">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <h1 className="text-2xl font-extrabold text-gray-900">{listing.title}</h1>
-                  <FavoriteButton
-                    listingId={listing.id}
-                    initialFavorite={favIds.has(listing.id)}
-                    isAuthed={isAuthed}
-                    size={20}
-                    className="flex-none w-11 h-11 rounded-full border border-gray-200 grid place-items-center text-gray-500 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
-                  />
-                </div>
-                <div className="text-3xl font-extrabold text-blue-700 mb-4">
+          {/* ПРАВО: липкий блок с ценой и кнопками */}
+          <div className="lst-side">
+            <div className="lst-price">
+              <div className="flex items-start justify-between gap-4">
+                <div className="price-big">
                   {listing.price ? `${listing.price.toLocaleString('ru-RU')} €` : 'Договорная'}
                 </div>
-
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
-                  <div className="flex items-center gap-1"><MapPin size={15} />{listing.location}</div>
-                  <div className="flex items-center gap-1"><Tag size={15} />{category?.name}</div>
-                  <div className="flex items-center gap-1"><Calendar size={15} />{new Date(listing.created_at).toLocaleDateString('ru-RU')}</div>
-                </div>
-
-                {details && Object.keys(details).length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="font-bold text-gray-900 mb-3">Характеристики</h2>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(details).map(([key, value]) => value && (
-                        <div key={key} className="bg-gray-50 rounded-xl px-3 py-2">
-                          <div className="text-xs text-gray-400">{fieldLabels[key] || key}</div>
-                          <div className="text-sm font-semibold text-gray-800">{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <h2 className="font-bold text-gray-900 mb-2">Описание</h2>
-                <p className="text-gray-600 leading-relaxed">{listing.description}</p>
+                <FavoriteButton
+                  listingId={listing.id}
+                  initialFavorite={favIds.has(listing.id)}
+                  isAuthed={isAuthed}
+                  size={20}
+                  className="flex-none w-11 h-11 rounded-full border border-gray-200 grid place-items-center text-gray-500 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                />
               </div>
-
-              <div className="md:w-64 shrink-0">
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-                  <button className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-800 transition-colors mb-3">
-                    Написать продавцу
-                  </button>
-                  <button className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-bold text-sm hover:border-blue-400 transition-colors">
-                    Позвонить
-                  </button>
-                </div>
-              </div>
+              <button type="button" title="Скоро" className="btn btn-grad btn-lg" style={{ width: '100%', marginTop: 18 }}>
+                <MessageCircle size={18} /> Написать продавцу
+              </button>
+              <button type="button" title="Скоро" className="btn btn-ghost btn-lg" style={{ width: '100%', marginTop: 10 }}>
+                <Phone size={17} /> Позвонить
+              </button>
             </div>
           </div>
         </div>
